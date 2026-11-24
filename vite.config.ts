@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'images/login-couple.webp'],
+      includeAssets: ['icon.svg', 'apple-touch-icon.png', 'images/login-couple.webp'],
       manifest: {
         name: '오운완 다이어리',
         short_name: '오운완',
@@ -17,10 +17,15 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#FBF6EC',
         theme_color: '#FBF6EC',
-        icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+        icons: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,webp}'],
+        globPatterns: ['**/*.{js,css,html,svg,webp,png}'],
       },
     }),
   ],
