@@ -80,7 +80,7 @@ export function AdminShop() {
 }
 
 export function AdminApprove() {
-  const { requests, coupons, resolveCoupon } = useStore()
+  const { requests, coupons, resolveCoupon, deleteCoupon } = useStore()
   const pending = requests.filter((r) => r.status === 'pending')
   const couponReqs = coupons.filter((c) => c.status === 'requested')
 
@@ -114,7 +114,18 @@ export function AdminApprove() {
           key={c.id}
           coupon={c}
           action={
-            <span className="row" style={{ gap: 6 }}>
+            <span className="row" style={{ gap: 4 }}>
+              <button
+                aria-label="쿠폰 삭제"
+                title="쿠폰 삭제"
+                onClick={() => {
+                  if (!window.confirm('이 쿠폰을 아예 지울까요? 운동러 쿠폰함에서도 사라지고 되돌릴 수 없어요.')) return
+                  deleteCoupon(c.id).catch(() => undefined)
+                }}
+                style={{ background: 'none', border: 0, padding: 6, color: 'var(--muted)' }}
+              >
+                <IconTrash size={18} />
+              </button>
               <button className="btn sm ghost" onClick={() => resolveCoupon(c.id, false).catch(() => undefined)}>다음에</button>
               <button className="btn sm" onClick={() => resolveCoupon(c.id, true).catch(() => undefined)}>수락</button>
             </span>

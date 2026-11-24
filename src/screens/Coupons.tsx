@@ -40,7 +40,8 @@ export default function Coupons() {
 }
 
 export function Ticket({ coupon, onUse, action }: { coupon: Coupon; onUse?: () => void; action?: ReactNode }) {
-  const { rewardOf } = useStore()
+  const { rewardOf, cancelCouponRequest } = useStore()
+  const [canceling, setCanceling] = useState(false)
   const r = rewardOf(coupon)
   if (!r) return null
   return (
@@ -62,7 +63,20 @@ export function Ticket({ coupon, onUse, action }: { coupon: Coupon; onUse?: () =
             (coupon.status === 'owned' ? (
               <button className="btn sm" onClick={onUse}>쓸래요</button>
             ) : coupon.status === 'requested' ? (
-              <span className="chip solid" style={{ background: 'var(--note)' }}>관리자 확인 중</span>
+              <span className="row" style={{ gap: 6 }}>
+                <span className="chip solid" style={{ background: 'var(--note)' }}>확인 중</span>
+                <button
+                  className="btn sm ghost"
+                  disabled={canceling}
+                  onClick={() => {
+                    if (!window.confirm('쿠폰 사용 요청을 취소할까요? 쿠폰은 그대로 남아요.')) return
+                    setCanceling(true)
+                    cancelCouponRequest(coupon.id).catch(() => setCanceling(false))
+                  }}
+                >
+                  요청 취소
+                </button>
+              </span>
             ) : (
               <span className="stamp" style={{ width: 40, height: 40, fontSize: 13 }}>사용</span>
             ))}

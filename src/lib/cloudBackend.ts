@@ -201,6 +201,14 @@ export function useCloudBackend(): Backend {
       await reload()
     },
 
+    cancelCouponRequest: async (id) => {
+      await rpc('cancel_coupon_request', { coupon_id: id })
+    },
+
+    deleteCoupon: async (id) => {
+      await rpc('delete_coupon', { coupon_id: id })
+    },
+
     saveWeights: async (weights) => {
       const results = await Promise.all(
         Object.entries(weights).map(([id, weight]) => sb.from('rewards').update({ weight }).eq('id', id)),

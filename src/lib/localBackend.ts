@@ -108,6 +108,11 @@ export function useLocalBackend(): Backend {
     deleteRequest: async (id) =>
       setData((d) => ({ ...d, requests: d.requests.filter((r) => r.id !== id || r.status === 'approved') })),
 
+    cancelCouponRequest: async (id) =>
+      setData((d) => ({ ...d, coupons: d.coupons.map((c) => (c.id === id && c.status === 'requested' ? { ...c, status: 'owned', wantDate: undefined } : c)) })),
+
+    deleteCoupon: async (id) => setData((d) => ({ ...d, coupons: d.coupons.filter((c) => c.id !== id) })),
+
     saveWeights: async (weights) =>
       setData((d) => ({ ...d, rewards: d.rewards.map((r) => ({ ...r, weight: weights[r.id] ?? r.weight })) })),
   }

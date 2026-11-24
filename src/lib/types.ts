@@ -62,6 +62,10 @@ export interface Backend extends Data {
   grant: (amount: number, reason: string) => Promise<void>
   /** 관리자: 대기/반려 요청 지우기 */
   deleteRequest: (id: string) => Promise<void>
+  /** 운동러: 쿠폰 사용 요청 취소 */
+  cancelCouponRequest: (id: string) => Promise<void>
+  /** 관리자: 쿠폰 삭제 */
+  deleteCoupon: (id: string) => Promise<void>
   /** 관리자: 보상별 가중치 저장 */
   saveWeights: (weights: Record<string, number>) => Promise<void>
 }
