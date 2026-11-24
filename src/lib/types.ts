@@ -1,4 +1,4 @@
-import type { Reward } from '../data/rewards'
+import { REWARDS, type Reward } from '../data/rewards'
 
 export type Role = 'user' | 'admin'
 export type ReqStatus = 'pending' | 'approved' | 'rejected'
@@ -38,9 +38,11 @@ export interface Data {
   pity: number
   /** 날짜별로 체크한 동작 번호 */
   checks: Record<string, number[]>
+  /** 상점 보상과 가중치 */
+  rewards: Reward[]
 }
 
-export const EMPTY: Data = { requests: [], ledger: [], coupons: [], pity: 0, checks: {} }
+export const EMPTY: Data = { requests: [], ledger: [], coupons: [], pity: 0, checks: {}, rewards: REWARDS }
 
 /** 로컬 저장소와 Supabase 저장소가 똑같이 지키는 모양 */
 export interface Backend extends Data {
@@ -58,6 +60,10 @@ export interface Backend extends Data {
   requestCoupon: (id: string, wantDate: string) => Promise<void>
   resolveCoupon: (id: string, accept: boolean) => Promise<void>
   grant: (amount: number, reason: string) => Promise<void>
+  /** 관리자: 대기/반려 요청 지우기 */
+  deleteRequest: (id: string) => Promise<void>
+  /** 관리자: 보상별 가중치 저장 */
+  saveWeights: (weights: Record<string, number>) => Promise<void>
 }
 
 export const PIN_LENGTH = 6

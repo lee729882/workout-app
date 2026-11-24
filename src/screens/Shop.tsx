@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties } from 'react'
 import BoxOpening, { type Phase } from '../components/BoxOpening'
-import { BOX_PRICE, GRADE_COLOR, GRADE_LABEL, PITY, REWARDS, REWARD_BY_ID, gradeOdds, type Grade, type Reward } from '../data/rewards'
+import { BOX_PRICE, GRADE_COLOR, GRADE_LABEL, PITY, REWARD_BY_ID, gradeOdds, percent, type Grade, type Reward } from '../data/rewards'
 import { useStore } from '../lib/store'
 
 const SHAKE_MS = 1100
@@ -21,7 +21,7 @@ const previewReward = () => {
 }
 
 export default function Shop({ onGoCoupons }: { onGoCoupons?: () => void }) {
-  const { balance, pity, openBox } = useStore()
+  const { balance, pity, openBox, rewards } = useStore()
   const [phase, setPhase] = useState<Phase | null>(() => (previewReward() ? 'result' : null))
   const [result, setResult] = useState<Reward | null>(previewReward)
 
@@ -92,14 +92,16 @@ export default function Shop({ onGoCoupons }: { onGoCoupons?: () => void }) {
         {(['legend', 'rare', 'common'] as Grade[]).map((g) => (
           <div key={g} style={{ padding: '10px 0', borderBottom: g !== 'common' ? '1.5px dashed var(--line)' : 0 }}>
             <span className="chip solid" style={{ background: GRADE_COLOR[g] }}>
-              {GRADE_LABEL[g]} {gradeOdds(g)}%
+              {GRADE_LABEL[g]} {gradeOdds(g, rewards)}%
             </span>
-            {REWARDS.filter((r) => r.grade === g).map((r) => (
-              <div key={r.id} className="between" style={{ fontSize: 14, padding: '6px 2px 0' }}>
-                <span>{r.refund ? `꽝 (${r.refund}P 돌려받기)` : r.name}</span>
-                <span style={{ fontWeight: 700 }}>{r.weight}%</span>
-              </div>
-            ))}
+            {rewards
+              .filter((r) => r.grade === g)
+              .map((r) => (
+                <div key={r.id} className="between" style={{ fontSize: 14, padding: '6px 2px 0' }}>
+                  <span>{r.refund ? `꽝 (${r.refund}P 돌려받기)` : r.name}</span>
+                  <span style={{ fontWeight: 700 }}>{percent(r.weight, rewards)}%</span>
+                </div>
+              ))}
           </div>
         ))}
       </div>

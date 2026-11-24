@@ -7,6 +7,77 @@ import { repsFor } from '../data/routines'
 import { shortLabel, timeLabel, toKey } from '../lib/date'
 import { useStore, type WorkoutRequest } from '../lib/store'
 import { Ticket } from './Coupons'
+import { IconTrash } from '../components/Icons'
+import { GRADE_COLOR, GRADE_LABEL, percent, type Grade } from '../data/rewards'
+
+/** 관리자: 상점 확률 조정 */
+export function AdminShop() {
+  const { rewards, saveWeights, mode } = useStore()
+  const [draft, setDraft] = useState<Record<string, number>>(() => Object.fromEntries(rewards.map((r) => [r.id, r.weight])))
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const preview = rewards.map((r) => ({ ...r, weight: draft[r.id] ?? r.weight }))
+  const changed = rewards.some((r) => (draft[r.id] ?? r.weight) !== r.weight)
+  const set = (id: string, v: number) => {
+    setSaved(false)
+    setDraft((d) => ({ ...d, [id]: Math.max(0, Math.min(999, Math.round(v))) }))
+  }
+
+  return (
+    <main className="screen">
+      <h1 className="title">상점 설정</h1>
+      <p className="muted small" style={{ margin: '-6px 0 0', lineHeight: 1.5 }}>
+        숫자끼리의 <b>비율</b>로 뽑아요. 합이 100일 필요는 없고, 오른쪽이 실제 확률이에요. 0으로 하면 안 나와요.
+      </p>
+
+      {(['legend', 'rare', 'common'] as Grade[]).map((g) => (
+        <div key={g} className="card" style={{ padding: '10px 16px' }}>
+          <span className="chip solid" style={{ background: GRADE_COLOR[g] }}>{GRADE_LABEL[g]}</span>
+          {preview
+            .filter((r) => r.grade === g)
+            .map((r) => (
+              <div key={r.id} className="row" style={{ padding: '10px 0 2px', gap: 8 }}>
+                <span style={{ flex: 1, fontSize: 14 }}>{r.refund ? `꽝 (${r.refund}P 환급)` : r.name}</span>
+                <button className="btn sm ghost" aria-label={`${r.name} 줄이기`} style={{ padding: '0 10px' }} onClick={() => set(r.id, r.weight - 1)}>−</button>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  aria-label={`${r.name} 가중치`}
+                  value={r.weight}
+                  onChange={(e) => set(r.id, Number(e.target.value) || 0)}
+                  style={{ width: 52, height: 36, textAlign: 'center', borderRadius: 10, border: '1.5px solid var(--line-2)', fontSize: 15, background: '#fffdf8' }}
+                />
+                <button className="btn sm ghost" aria-label={`${r.name} 늘리기`} style={{ padding: '0 10px' }} onClick={() => set(r.id, r.weight + 1)}>+</button>
+                <span style={{ width: 54, textAlign: 'right', fontWeight: 700, fontSize: 14 }}>{percent(r.weight, preview)}%</span>
+              </div>
+            ))}
+        </div>
+      ))}
+
+      <button
+        className="btn"
+        disabled={!changed || busy || preview.every((r) => r.weight === 0)}
+        onClick={async () => {
+          setBusy(true)
+          try {
+            await saveWeights(draft)
+            setSaved(true)
+          } catch {
+            /* 오류 창은 저장소에서 보여줘요 */
+          } finally {
+            setBusy(false)
+          }
+        }}
+      >
+        {busy ? '저장 중…' : saved && !changed ? '저장했어요 ✓' : '저장하기'}
+      </button>
+      <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+        저장하면 운동러 상점에 바로 반영돼요.{mode === 'local' ? ' (임시 모드: 이 기기에만 저장)' : ''}
+      </p>
+    </main>
+  )
+}
 
 export function AdminApprove() {
   const { requests, coupons, resolveCoupon } = useStore()
@@ -55,12 +126,17 @@ export function AdminApprove() {
 }
 
 function RequestCard({ req }: { req: WorkoutRequest }) {
-  const { review, checks } = useStore()
+  const { review, checks, deleteRequest } = useStore()
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
   const decide = (approve: boolean) => {
     setBusy(true)
     review(req.id, approve, comment.trim()).catch(() => setBusy(false))
+  }
+  const remove = () => {
+    if (!window.confirm('이 요청을 지울까요? 포인트는 주지 않고, 운동러는 다시 요청할 수 있어요.')) return
+    setBusy(true)
+    deleteRequest(req.id).catch(() => setBusy(false))
   }
   const plan = PLAN_BY_DATE[req.date]
   const done = (checks[req.date] ?? []).length
@@ -75,6 +151,9 @@ function RequestCard({ req }: { req: WorkoutRequest }) {
           <div style={{ fontSize: 14, fontWeight: 700 }}>운동러가 완료를 요청했어요</div>
           <div className="muted" style={{ fontSize: 12 }}>{shortLabel(req.date)} · {timeLabel(req.createdAt)}</div>
         </div>
+        <button aria-label="요청 삭제" title="요청 삭제" disabled={busy} onClick={remove} style={{ background: 'none', border: 0, padding: 8, color: 'var(--muted)' }}>
+          <IconTrash />
+        </button>
       </div>
       <div style={{ background: '#fff', padding: '8px 8px 0', boxShadow: '0 0 0 1.5px #efe4d2', transform: 'rotate(-1deg)' }}>
         {req.photo ? (

@@ -35,7 +35,7 @@ function themeOf(r: Reward): Theme {
       stamp: { text: '전설!', color: '#F6D77B', size: 128, bg: 'rgba(43,36,32,.6)' },
       confetti: true,
       title: '랜덤박스 결과',
-      line: `${r.weight}%를 뚫었어요! 날짜 정해서 쓰세요`,
+      line: '전설을 뽑았어요! 날짜 정해서 쓰세요',
     }
   if (r.grade === 'rare')
     return {

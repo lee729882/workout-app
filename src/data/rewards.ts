@@ -5,7 +5,7 @@ export interface Reward {
   name: string
   desc: string
   grade: Grade
-  /** 뽑힐 가중치 (합계 100 = %) */
+  /** 뽑힐 가중치. 실제 확률 = weight ÷ 전체 합계 */
   weight: number
   /** 쿠폰 왼쪽에 크게 적히는 말 */
   stub: string
@@ -20,13 +20,13 @@ export const POINTS_PER_WORKOUT = 10
 export const WEEKLY_BONUS = 10
 export const WEEKLY_GOAL = 3
 
-// Supabase rewards 표와 같은 값이어야 해요 (supabase/rewards-v2.sql)
+// 기본값. 클라우드 모드에서는 Supabase rewards 표(관리자가 수정)를 읽어요.
 export const REWARDS: Reward[] = [
-  { id: 'miss', name: '꽝', desc: '10P 돌려받기', grade: 'common', weight: 26, stub: '꽝', refund: 10 },
-  { id: 'game30', name: '게임하기권 30분', desc: '짧게 한 판', grade: 'common', weight: 22, stub: '게임 30m' },
-  { id: 'stream30', name: '방송하기권 30분', desc: '짧게 방송 30분', grade: 'common', weight: 22, stub: '방송 30m' },
-  { id: 'game120', name: '게임하기권 2시간', desc: '눈치 안 보고 게임 2시간', grade: 'rare', weight: 12, stub: '게임 2h' },
-  { id: 'stream', name: '방송하기권 2시간', desc: '하고 싶은 날 방송 2시간', grade: 'rare', weight: 12, stub: '방송 2h' },
+  { id: 'miss', name: '꽝', desc: '10P 돌려받기', grade: 'common', weight: 50, stub: '꽝', refund: 10 },
+  { id: 'game30', name: '게임하기권 30분', desc: '짧게 한 판', grade: 'common', weight: 25, stub: '게임 30m' },
+  { id: 'stream30', name: '방송하기권 30분', desc: '짧게 방송 30분', grade: 'common', weight: 25, stub: '방송 30m' },
+  { id: 'game120', name: '게임하기권 2시간', desc: '눈치 안 보고 게임 2시간', grade: 'rare', weight: 15, stub: '게임 2h' },
+  { id: 'stream', name: '방송하기권 2시간', desc: '하고 싶은 날 방송 2시간', grade: 'rare', weight: 15, stub: '방송 2h' },
   { id: 'date', name: '연차 데이트권', desc: '원하는 날 연차 쓰고 하루 종일 데이트', grade: 'legend', weight: 5, stub: '데이트' },
   { id: 'wish', name: '소원권', desc: '관리자가 들어줄 수 있는 소원 하나', grade: 'legend', weight: 1, stub: '소원' },
 ]
@@ -36,16 +36,23 @@ export const REWARD_BY_ID: Record<string, Reward> = Object.fromEntries(REWARDS.m
 export const GRADE_LABEL: Record<Grade, string> = { common: '일반', rare: '레어', legend: '전설' }
 export const GRADE_COLOR: Record<Grade, string> = { common: '#C9D9A6', rare: '#C9C9E8', legend: '#F6D77B' }
 
-export function gradeOdds(grade: Grade) {
-  return REWARDS.filter((r) => r.grade === grade).reduce((s, r) => s + r.weight, 0)
+const total = (list: Reward[]) => list.reduce((s, r) => s + r.weight, 0)
+
+/** 실제 확률(%)을 소수 한 자리로 */
+export function percent(weight: number, list: Reward[]) {
+  const t = total(list)
+  return t ? Math.round((weight / t) * 1000) / 10 : 0
+}
+
+export function gradeOdds(grade: Grade, list: Reward[]) {
+  return percent(total(list.filter((r) => r.grade === grade)), list)
 }
 
 /** pity = 지금까지 레어 이상 없이 연 횟수 */
-export function roll(pity: number, rand = Math.random): Reward {
+export function roll(pity: number, list: Reward[] = REWARDS, rand = Math.random): Reward {
   const guaranteed = pity + 1 >= PITY
-  const pool = guaranteed ? REWARDS.filter((r) => r.grade !== 'common') : REWARDS
-  const total = pool.reduce((s, r) => s + r.weight, 0)
-  let x = rand() * total
+  const pool = (guaranteed ? list.filter((r) => r.grade !== 'common') : list).filter((r) => r.weight > 0)
+  let x = rand() * total(pool)
   for (const r of pool) {
     x -= r.weight
     if (x < 0) return r

@@ -29,7 +29,12 @@ function save(key: string, value: unknown) {
 }
 
 export function useLocalBackend(): Backend {
-  const [data, setData] = useState<Data>(() => ({ ...EMPTY, ...load<Partial<Data>>(DATA_KEY, {}) }))
+  const [data, setData] = useState<Data>(() => {
+    const saved = load<Partial<Data>>(DATA_KEY, {})
+    // 예전에 저장된 보상 목록은 쓰지 않고 가중치만 이어받아요
+    const w = Object.fromEntries((saved.rewards ?? []).map((r) => [r.id, r.weight]))
+    return { ...EMPTY, ...saved, rewards: EMPTY.rewards.map((r) => ({ ...r, weight: w[r.id] ?? r.weight })) }
+  })
   const [role, setRole] = useState<Role | null>(() => load<Role | null>(ROLE_KEY, null))
 
   useEffect(() => save(DATA_KEY, data), [data])
@@ -78,7 +83,7 @@ export function useLocalBackend(): Backend {
 
     openBox: async () => {
       if (balance < BOX_PRICE) return null
-      const reward = roll(data.pity)
+      const reward = roll(data.pity, data.rewards)
       setData((d) => {
         const ledger = [...d.ledger, { id: uid(), amount: -BOX_PRICE, reason: '랜덤박스 열기', at: now() }]
         const coupons = [...d.coupons]
@@ -99,5 +104,11 @@ export function useLocalBackend(): Backend {
       })),
 
     grant: async (amount, reason) => setData((d) => ({ ...d, ledger: [...d.ledger, { id: uid(), amount, reason, at: now() }] })),
+
+    deleteRequest: async (id) =>
+      setData((d) => ({ ...d, requests: d.requests.filter((r) => r.id !== id || r.status === 'approved') })),
+
+    saveWeights: async (weights) =>
+      setData((d) => ({ ...d, rewards: d.rewards.map((r) => ({ ...r, weight: weights[r.id] ?? r.weight })) })),
   }
 }

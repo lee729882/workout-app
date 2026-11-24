@@ -40,7 +40,28 @@ const eulReul = (w: string) => {
   return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0 ? '을' : '를'
 }
 
+const KIND: Record<string, string> = {
+  upper: '상체',
+  lower: '하체',
+  cardio: '유산소',
+  treadmill: '런닝머신',
+  upperWalk: '상체+걷기',
+  lowerWalk: '하체+걷기',
+}
+
 function messageFor({ table, type, record: rec, old_record: old, reward }: Hook): Msg | null {
+  // 운동하는 날 밤 12시 알림 (daily_reminder 가 보내요)
+  if (table === 'reminder') {
+    const place = rec.place === 'parents' ? '본가' : '집'
+    const detail = rec.reps ? `${rec.reps}회 × 3세트 · ${place} · 약 30분` : (rec.cardio?.[0] ?? `${place} · 30분`)
+    return {
+      to: 'user',
+      title: `🏋️ 오늘은 ${KIND[rec.kind] ?? '운동'} 데이!`,
+      body: rec.note ? `${detail}\n📌 ${rec.note}` : detail,
+      tag: `reminder-${rec.date}`,
+    }
+  }
+
   if (table === 'workout_requests') {
     if (type === 'INSERT') {
       return {

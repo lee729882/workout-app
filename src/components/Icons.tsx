@@ -42,6 +42,12 @@ export const IconList = (p: P) => (
 export const IconLogout = (p: P) => (
   <svg {...base(p)}><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10" /></svg>
 )
+export const IconTrash = (p: P) => (
+  <svg {...base(p)}><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" /></svg>
+)
+export const IconSliders = (p: P) => (
+  <svg {...base(p)}><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></svg>
+)
 export const IconClose = (p: P) => (
   <svg {...base(p)}><path d="M6 6l12 12M18 6L6 18" /></svg>
 )

@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react'
-import { IconCalendar, IconCheck, IconGift, IconHome, IconList, IconLogout, IconTicket } from './components/Icons'
+import { IconCalendar, IconCheck, IconGift, IconHome, IconList, IconLogout, IconSliders, IconTicket } from './components/Icons'
 import { useStore } from './lib/store'
 import Login from './screens/Login'
 import Today from './screens/Today'
 import Calendar from './screens/Calendar'
 import Shop from './screens/Shop'
 import Coupons from './screens/Coupons'
-import { AdminApprove, AdminPoints } from './screens/Admin'
+import { AdminApprove, AdminPoints, AdminShop } from './screens/Admin'
 
 type Tab = { id: string; label: string; icon: ReactNode; screen: ReactNode; badge?: number }
 
@@ -37,6 +37,7 @@ export default function App() {
       : [
           { id: 'home', label: '승인', icon: <IconCheck />, screen: <AdminApprove />, badge: pendingReq + pendingCoupon },
           { id: 'cal', label: '캘린더', icon: <IconCalendar />, screen: <Calendar /> },
+          { id: 'shop', label: '상점 설정', icon: <IconSliders />, screen: <AdminShop /> },
           { id: 'points', label: '포인트', icon: <IconList />, screen: <AdminPoints /> },
         ]
 

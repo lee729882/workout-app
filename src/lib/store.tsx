@@ -19,7 +19,7 @@ function useStoreValue() {
     ...b,
     balance,
     requestFor: (date: string) => [...b.requests].reverse().find((r) => r.date === date),
-    rewardOf: (c: Coupon) => REWARD_BY_ID[c.rewardId],
+    rewardOf: (c: Coupon) => b.rewards.find((r) => r.id === c.rewardId) ?? REWARD_BY_ID[c.rewardId],
   }
 }
 
