@@ -40,8 +40,8 @@ export function AdminApprove() {
           coupon={c}
           action={
             <span className="row" style={{ gap: 6 }}>
-              <button className="btn sm ghost" onClick={() => resolveCoupon(c.id, false)}>다음에</button>
-              <button className="btn sm" onClick={() => resolveCoupon(c.id, true)}>수락</button>
+              <button className="btn sm ghost" onClick={() => resolveCoupon(c.id, false).catch(() => undefined)}>다음에</button>
+              <button className="btn sm" onClick={() => resolveCoupon(c.id, true).catch(() => undefined)}>수락</button>
             </span>
           }
         />
@@ -53,6 +53,11 @@ export function AdminApprove() {
 function RequestCard({ req }: { req: WorkoutRequest }) {
   const { review, checks } = useStore()
   const [comment, setComment] = useState('')
+  const [busy, setBusy] = useState(false)
+  const decide = (approve: boolean) => {
+    setBusy(true)
+    review(req.id, approve, comment.trim()).catch(() => setBusy(false))
+  }
   const plan = PLAN_BY_DATE[req.date]
   const done = (checks[req.date] ?? []).length
   const isStrength = plan && ['upper', 'lower', 'upperWalk', 'lowerWalk'].includes(plan.kind)
@@ -86,8 +91,8 @@ function RequestCard({ req }: { req: WorkoutRequest }) {
         <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="오늘도 최고! 팔뚝 멋있다" />
       </label>
       <div className="row">
-        <button className="btn ghost" style={{ flex: 1, fontSize: 15 }} onClick={() => review(req.id, false, comment.trim())}>다시 해볼까요</button>
-        <button className="btn" style={{ flex: 1.4, fontSize: 15 }} onClick={() => review(req.id, true, comment.trim())}>승인하고 +10P</button>
+        <button className="btn ghost" style={{ flex: 1, fontSize: 15 }} disabled={busy} onClick={() => decide(false)}>다시 해볼까요</button>
+        <button className="btn" style={{ flex: 1.4, fontSize: 15 }} disabled={busy} onClick={() => decide(true)}>승인하고 +10P</button>
       </div>
     </div>
   )
@@ -121,8 +126,7 @@ export function AdminPoints() {
           className="btn"
           disabled={amount === 0 || !reason.trim()}
           onClick={() => {
-            grant(amount, reason.trim())
-            setReason('')
+            grant(amount, reason.trim()).then(() => setReason(''), () => undefined)
           }}
         >
           {amount >= 0 ? '지급하기' : '차감하기'}

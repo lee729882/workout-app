@@ -14,6 +14,13 @@ export default function App() {
   const store = useStore()
   const [tab, setTab] = useState('home')
 
+  if (!store.ready) {
+    return (
+      <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="hand" style={{ fontSize: 28 }}>불러오는 중…</span>
+      </div>
+    )
+  }
   if (!store.role) return <div className="app"><Login /></div>
 
   const pendingReq = store.requests.filter((r) => r.status === 'pending').length
@@ -49,7 +56,7 @@ export default function App() {
         <button
           className="tab"
           onClick={() => {
-            store.setRole(null)
+            store.signOut()
             setTab('home')
           }}
         >

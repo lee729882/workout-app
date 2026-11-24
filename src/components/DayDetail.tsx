@@ -125,6 +125,7 @@ function RequestSheet({ plan, onClose }: { plan: DayPlan; onClose: () => void })
   const { submitRequest } = useStore()
   const [memo, setMemo] = useState('')
   const [photo, setPhoto] = useState<string>()
+  const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   return (
@@ -156,12 +157,18 @@ function RequestSheet({ plan, onClose }: { plan: DayPlan; onClose: () => void })
         </label>
         <button
           className="btn"
-          onClick={() => {
-            submitRequest(plan.date, memo.trim(), photo)
-            onClose()
+          disabled={sending}
+          onClick={async () => {
+            setSending(true)
+            try {
+              await submitRequest(plan.date, memo.trim(), photo)
+              onClose()
+            } catch {
+              setSending(false)
+            }
           }}
         >
-          보내기
+          {sending ? '보내는 중…' : '보내기'}
         </button>
       </div>
     </div>

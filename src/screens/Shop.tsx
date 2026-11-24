@@ -10,10 +10,14 @@ export default function Shop() {
   const open = () => {
     if (shaking) return
     setShaking(true)
-    setTimeout(() => {
-      setShaking(false)
-      setResult(openBox())
-    }, 900)
+    const wait = new Promise((r) => setTimeout(r, 900))
+    openBox()
+      .then(async (reward) => {
+        await wait
+        setResult(reward)
+      })
+      .catch(() => undefined)
+      .finally(() => setShaking(false))
   }
 
   return (

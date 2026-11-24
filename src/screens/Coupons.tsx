@@ -90,8 +90,7 @@ function UseSheet({ coupon, onClose }: { coupon: Coupon; onClose: () => void }) 
             style={{ flex: 2 }}
             disabled={!date}
             onClick={() => {
-              requestCoupon(coupon.id, date)
-              onClose()
+              requestCoupon(coupon.id, date).then(onClose, () => undefined)
             }}
           >
             관리자에게 요청

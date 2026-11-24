@@ -1,14 +1,26 @@
 import { useState, type ReactNode } from 'react'
 import { God, Pig } from '../components/Avatars'
-import { useStore, type Role } from '../lib/store'
+import { PIN_LENGTH, useStore, type Role } from '../lib/store'
 
 export default function Login() {
-  const { setRole } = useStore()
+  const { signIn, mode } = useStore()
   const [who, setWho] = useState<Role>('user')
   const [pin, setPin] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // 임시 모드: 아무 4자리나 통과. Supabase 연결 후 진짜 로그인으로 바뀌어요.
-  const ready = pin.length === 4
+  const ready = pin.length === PIN_LENGTH && !busy
+
+  const enter = async () => {
+    setBusy(true)
+    setError(null)
+    const err = await signIn(who, pin)
+    setBusy(false)
+    if (err) {
+      setError(err)
+      setPin('')
+    }
+  }
 
   return (
     <main className="screen" style={{ alignItems: 'center', paddingBottom: 'calc(28px + var(--safe-b))', minHeight: '100dvh' }}>
@@ -39,9 +51,9 @@ export default function Login() {
       </div>
 
       <label className="muted small" style={{ marginTop: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, position: 'relative' }}>
-        비밀번호 4자리
-        <span className="row" style={{ gap: 16 }} aria-hidden="true">
-          {[0, 1, 2, 3].map((i) => (
+        비밀번호 {PIN_LENGTH}자리
+        <span className="row" style={{ gap: 14 }} aria-hidden="true">
+          {Array.from({ length: PIN_LENGTH }, (_, i) => i).map((i) => (
             <span key={i} style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--brown)', background: i < pin.length ? 'var(--brown)' : 'transparent' }} />
           ))}
         </span>
@@ -49,17 +61,21 @@ export default function Login() {
           type="password"
           inputMode="numeric"
           autoComplete="current-password"
-          maxLength={4}
+          maxLength={PIN_LENGTH}
           value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))}
+          onKeyDown={(e) => e.key === 'Enter' && ready && enter()}
           style={{ position: 'absolute', inset: 0, opacity: 0 }}
         />
       </label>
+      {error && <p role="alert" style={{ margin: 0, color: 'var(--stamp)', fontSize: 14 }}>{error}</p>}
 
-      <button className="btn" style={{ width: '100%', marginTop: 'auto' }} disabled={!ready} onClick={() => setRole(who)}>
-        들어가기
+      <button className="btn" style={{ width: '100%', marginTop: 'auto' }} disabled={!ready} onClick={enter}>
+        {busy ? '들어가는 중…' : '들어가기'}
       </button>
-      <p className="muted" style={{ fontSize: 12, margin: 0 }}>계정은 관리자가 만들어 줘요</p>
+      <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+        {mode === 'local' ? '임시 모드 · 이 기기에만 저장돼요' : '계정은 관리자가 만들어 줘요'}
+      </p>
     </main>
   )
 }
