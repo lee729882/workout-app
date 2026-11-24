@@ -22,6 +22,8 @@ SQL Editor에 `supabase/push-setup.secret.sql` 내용을 통째로 붙여 넣고
 4. **Deploy function**
 5. 배포된 `push` 함수 → **Details**(또는 Settings)에서 **Verify JWT / Enforce JWT verification** 을 **끄고** 저장
    - DB가 직접 부르는 함수라 로그인 토큰이 없어요. 대신 비밀 헤더로 확인해요.
+6. SQL Editor에서 `supabase/push-v2.sql` 실행 → 결과에 나온 값을 복사
+7. **Edge Functions → Secrets** → Name `HOOK_SECRET`, Value 에 6번 값 → Save
 
 ## 3. Vercel에 공개키 넣기
 Vercel → 프로젝트 → **Settings → Environment Variables** → Add
