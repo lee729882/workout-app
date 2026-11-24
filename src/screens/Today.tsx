@@ -4,6 +4,7 @@ import { TIP, repsFor } from '../data/routines'
 import { longLabel, shortLabel, todayKey, weekStart } from '../lib/date'
 import { useStore } from '../lib/store'
 import { DayCard, DayHeaderChips, RequestBar } from '../components/DayDetail'
+import InstallBanner from '../components/InstallBanner'
 
 export default function Today() {
   const { balance, requests } = useStore()
@@ -24,6 +25,7 @@ export default function Today() {
 
   return (
     <main className="screen">
+      <InstallBanner />
       <div className="between" style={{ alignItems: 'flex-start' }}>
         <div>
           <div className="muted small">{longLabel(today)}</div>

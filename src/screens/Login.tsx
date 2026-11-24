@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { God, Pig } from '../components/Avatars'
+import InstallBanner from '../components/InstallBanner'
 import { PIN_LENGTH, useStore, type Role } from '../lib/store'
 
 export default function Login() {
@@ -24,6 +25,7 @@ export default function Login() {
 
   return (
     <main className="screen" style={{ alignItems: 'center', paddingBottom: 'calc(28px + var(--safe-b))', minHeight: '100dvh' }}>
+      <InstallBanner />
       <h1 className="title" style={{ fontSize: 44, textAlign: 'center' }}>오운완 다이어리</h1>
       <p className="muted small" style={{ margin: '-6px 0 0' }}>오늘 운동 완료, 우리 둘만의 기록장</p>
 
