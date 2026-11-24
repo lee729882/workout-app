@@ -55,8 +55,8 @@ export function Ticket({ coupon, onUse, action }: { coupon: Coupon; onUse?: () =
       <div style={{ flex: 1, padding: '14px 14px 12px', minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: 16 }}>{r.name}</div>
         <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{r.desc}</div>
-        <div className="between" style={{ marginTop: 10 }}>
-          <span className="muted" style={{ fontSize: 11 }}>
+        <div className="ticket-foot">
+          <span className="muted" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
             {coupon.wantDate ? `${shortLabel(coupon.wantDate)} 사용${coupon.status === 'used' ? '' : ' 희망'}` : `받은 날 ${shortLabel(toKey(new Date(coupon.at)))}`}
           </span>
           {action ??

@@ -41,7 +41,7 @@ a { color: var(--brown); }
 .between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .title { font-family: var(--hand); font-weight: 700; font-size: 38px; line-height: 1.05; margin: 0; }
 
-.btn { border: 0; border-radius: 18px; background: var(--brown); color: #fff8ec; font-weight: 700; font-size: 17px; min-height: 56px; padding: 0 18px; }
+.btn { white-space: nowrap; flex-shrink: 0; border: 0; border-radius: 18px; background: var(--brown); color: #fff8ec; font-weight: 700; font-size: 17px; min-height: 56px; padding: 0 18px; }
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn.sm { min-height: 36px; font-size: 13px; border-radius: 10px; padding: 0 14px; }
 .btn.ghost { background: #fff; color: var(--brown); box-shadow: inset 0 0 0 2px var(--brown); }
@@ -92,6 +92,9 @@ a { color: var(--brown); }
 .ticket { position: relative; display: flex; background: #fff; border-radius: 10px; box-shadow: 0 10px 20px -14px rgba(59, 47, 37, 0.55); }
 .stub { width: 86px; flex: none; border-radius: 10px 0 0 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 2px dashed var(--paper); padding: 8px 4px; text-align: center; }
 .stub .hand { font-size: 24px; line-height: 1.1; }
+/* 쿠폰 아래줄: 자리가 모자라면 버튼들이 통째로 다음 줄 오른쪽으로 내려가요 (글자는 안 쪼개짐) */
+.ticket-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.ticket-foot > :last-child { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
 .notch { position: absolute; left: 78px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); }
 .seg { display: flex; gap: 18px; border-bottom: 1.5px dashed var(--line-2); }
 .seg button { background: none; border: 0; padding: 8px 0; font-size: 14px; color: var(--muted); }
