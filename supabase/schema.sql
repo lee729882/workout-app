@@ -85,11 +85,13 @@ insert into settings values
   ('weekly_bonus', 10);
 
 insert into rewards (id, name, description, grade, weight, stub, refund) values
-  ('game30',  '게임하기권 30분',  '짧게 한 판',                          'common', 45, '게임 30m', null),
-  ('miss',    '꽝',              '10P 돌려받기',                        'common', 15, '꽝',       10),
-  ('stream',  '방송하기권',       '하고 싶은 날 방송 한 번',               'rare',   15, '방송',     null),
-  ('game120', '게임하기권 2시간', '눈치 안 보고 게임 2시간',               'rare',   15, '게임 2h',  null),
-  ('date',    '연차 데이트권',    '원하는 날 연차 쓰고 하루 종일 데이트',     'legend', 10, '데이트',   null);
+  ('miss',     '꽝',              '10P 돌려받기',                       'common', 26, '꽝',       10),
+  ('game30',   '게임하기권 30분',  '짧게 한 판',                         'common', 22, '게임 30m', null),
+  ('stream30', '방송하기권 30분',  '짧게 방송 30분',                     'common', 22, '방송 30m', null),
+  ('game120',  '게임하기권 2시간', '눈치 안 보고 게임 2시간',              'rare',   12, '게임 2h',  null),
+  ('stream',   '방송하기권 2시간', '하고 싶은 날 방송 2시간',              'rare',   12, '방송 2h',  null),
+  ('date',     '연차 데이트권',    '원하는 날 연차 쓰고 하루 종일 데이트',    'legend',  5, '데이트',   null),
+  ('wish',     '소원권',          '관리자가 들어줄 수 있는 소원 하나',       'legend',  1, '소원',     null);
 
 -- ───────────────────────── 권한 ─────────────────────────
 -- profiles 에 등록된 두 사람만 읽을 수 있어요.

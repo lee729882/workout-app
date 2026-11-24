@@ -1,23 +1,61 @@
-import { useState, type CSSProperties } from 'react'
-import { BOX_PRICE, GRADE_COLOR, GRADE_LABEL, PITY, REWARDS, gradeOdds, type Grade, type Reward } from '../data/rewards'
+import { useRef, useState, type CSSProperties } from 'react'
+import BoxOpening, { type Phase } from '../components/BoxOpening'
+import { BOX_PRICE, GRADE_COLOR, GRADE_LABEL, PITY, REWARDS, REWARD_BY_ID, gradeOdds, type Grade, type Reward } from '../data/rewards'
 import { useStore } from '../lib/store'
 
-export default function Shop() {
-  const { balance, pity, openBox } = useStore()
-  const [shaking, setShaking] = useState(false)
-  const [result, setResult] = useState<Reward | null>(null)
+const SHAKE_MS = 1100
+const BURST_MS = 450
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const buzz = (pattern: number[]) => {
+  try {
+    navigator.vibrate?.(pattern)
+  } catch {
+    /* 아이폰은 진동을 지원하지 않아요 */
+  }
+}
 
-  const open = () => {
-    if (shaking) return
-    setShaking(true)
-    const wait = new Promise((r) => setTimeout(r, 900))
-    openBox()
-      .then(async (reward) => {
-        await wait
-        setResult(reward)
-      })
-      .catch(() => undefined)
-      .finally(() => setShaking(false))
+/** 연출 미리보기: 주소 뒤에 ?box=wish 처럼 붙이면 그 결과 화면만 보여줘요 (포인트는 안 써요) */
+const previewReward = () => {
+  const id = new URLSearchParams(window.location.search).get('box')
+  return id ? (REWARD_BY_ID[id] ?? null) : null
+}
+
+export default function Shop({ onGoCoupons }: { onGoCoupons?: () => void }) {
+  const { balance, pity, openBox } = useStore()
+  const [phase, setPhase] = useState<Phase | null>(() => (previewReward() ? 'result' : null))
+  const [result, setResult] = useState<Reward | null>(previewReward)
+
+  const busy = useRef(false)
+
+  const open = async () => {
+    if (busy.current) return
+    busy.current = true
+    setResult(null)
+    setPhase('shake')
+    buzz([40, 60, 40, 60, 40, 60, 80])
+    try {
+      const [reward] = await Promise.all([openBox(), wait(SHAKE_MS)])
+      if (!reward) {
+        setPhase(null)
+        return
+      }
+      setPhase('burst')
+      buzz([60])
+      await wait(BURST_MS)
+      setResult(reward)
+      setPhase('result')
+      if (reward.grade === 'legend') buzz([120, 60, 120, 60, 400])
+      else if (reward.grade === 'rare') buzz([80, 50, 80])
+    } catch {
+      setPhase(null)
+    } finally {
+      busy.current = false
+    }
+  }
+
+  const close = () => {
+    setPhase(null)
+    setResult(null)
   }
 
   return (
@@ -30,11 +68,11 @@ export default function Shop() {
       <div className="card" style={{ background: '#e9d6b4', boxShadow: 'inset 0 0 0 2px #d8c09a', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingTop: 24 }}>
         <span className="tape" style={{ top: -11, left: 18, transform: 'rotate(-8deg)' }} />
         <span className="tape" style={{ top: -11, right: 18, transform: 'rotate(7deg)', background: 'rgba(239,177,181,.8)' }} />
-        <GiftBox shaking={shaking} />
+        <GiftBox />
         <div className="hand" style={{ fontSize: 30 }}>두근두근 랜덤박스</div>
-        <div className="small" style={{ color: 'var(--brown)' }}>한 번 여는 데 {BOX_PRICE}P</div>
-        <button className="btn" style={{ width: '100%', marginTop: 6 }} disabled={balance < BOX_PRICE || shaking} onClick={open}>
-          {shaking ? '두근두근…' : balance < BOX_PRICE ? `${BOX_PRICE - balance}P 더 모으면 열 수 있어요` : `${BOX_PRICE}P로 열어보기`}
+        <div className="small" style={{ color: 'var(--brown)' }}>한 번 여는 데 {BOX_PRICE}P · 꽝이어도 10P는 돌려받아요</div>
+        <button className="btn" style={{ width: '100%', marginTop: 6 }} disabled={balance < BOX_PRICE || !!phase} onClick={open}>
+          {balance < BOX_PRICE ? `${BOX_PRICE - balance}P 더 모으면 열 수 있어요` : `${BOX_PRICE}P로 열어보기`}
         </button>
       </div>
 
@@ -51,37 +89,45 @@ export default function Shop() {
       </div>
 
       <div className="card" style={{ padding: '6px 16px' }}>
-        {(['common', 'rare', 'legend'] as Grade[]).map((g, i) => (
-          <div key={g} className="row" style={{ padding: '10px 0', borderBottom: i < 2 ? '1.5px dashed var(--line)' : 0, gap: 12 }}>
-            <span className="chip solid" style={{ background: GRADE_COLOR[g], minWidth: 70, justifyContent: 'center' }}>
+        {(['legend', 'rare', 'common'] as Grade[]).map((g) => (
+          <div key={g} style={{ padding: '10px 0', borderBottom: g !== 'common' ? '1.5px dashed var(--line)' : 0 }}>
+            <span className="chip solid" style={{ background: GRADE_COLOR[g] }}>
               {GRADE_LABEL[g]} {gradeOdds(g)}%
             </span>
-            <span style={{ fontSize: 14 }}>
-              {REWARDS.filter((r) => r.grade === g).map((r) => (r.refund ? `꽝 (${r.refund}P 돌려받기)` : r.name)).join(' · ')}
-            </span>
+            {REWARDS.filter((r) => r.grade === g).map((r) => (
+              <div key={r.id} className="between" style={{ fontSize: 14, padding: '6px 2px 0' }}>
+                <span>{r.refund ? `꽝 (${r.refund}P 돌려받기)` : r.name}</span>
+                <span style={{ fontWeight: 700 }}>{r.weight}%</span>
+              </div>
+            ))}
           </div>
         ))}
       </div>
 
-      {result && (
-        <div className="sheet-bg" style={{ alignItems: 'center' }} onClick={() => setResult(null)}>
-          <div className="card reveal" role="dialog" aria-modal="true" aria-label="뽑기 결과" style={{ width: 'min(320px, 88vw)', textAlign: 'center', padding: '30px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }} onClick={(e) => e.stopPropagation()}>
-            <span className="tape" style={{ top: -11, left: '50%', marginLeft: -42 }} />
-            <span className="chip solid" style={{ background: GRADE_COLOR[result.grade], alignSelf: 'center' }}>{GRADE_LABEL[result.grade]}</span>
-            <div className="hand" style={{ fontSize: 38 }}>{result.refund ? '꽝!' : result.name}</div>
-            <div className="muted small">{result.refund ? `${result.refund}P를 돌려받았어요` : '쿠폰함에 넣었어요'}</div>
-            <button className="btn" onClick={() => setResult(null)}>좋아요</button>
-          </div>
-        </div>
+      {phase && (
+        <BoxOpening
+          phase={phase}
+          reward={result}
+          canAgain={balance >= BOX_PRICE}
+          onClose={close}
+          onAgain={() => {
+            close()
+            setTimeout(open, 50)
+          }}
+          onCoupons={() => {
+            close()
+            onGoCoupons?.()
+          }}
+        />
       )}
     </main>
   )
 }
 
-function GiftBox({ shaking }: { shaking: boolean }) {
+function GiftBox() {
   const s = (o: CSSProperties): CSSProperties => ({ position: 'absolute', ...o })
   return (
-    <div className={`box${shaking ? ' shaking' : ''}`} aria-hidden="true" style={{ position: 'relative', width: 170, height: 140, marginTop: 4 }}>
+    <div className="box" aria-hidden="true" style={{ position: 'relative', width: 170, height: 140, marginTop: 4, animation: 'thump 1.6s ease-in-out infinite' }}>
       <span style={s({ left: 4, top: 46, width: 162, height: 94, background: '#b97b48', borderRadius: 4 })} />
       <span style={s({ left: 74, top: 46, width: 22, height: 94, background: '#e0603a' })} />
       <span style={s({ left: -6, top: 18, width: 182, height: 34, background: '#c98e5a', borderRadius: 6, transform: 'rotate(-6deg)' })} />

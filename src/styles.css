@@ -109,6 +109,30 @@ a { color: var(--brown); }
 @keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .box.shaking { animation: shake 0.45s ease-in-out 2; }
 .reveal { animation: pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1); }
-@media (prefers-reduced-motion: reduce) { .box.shaking, .reveal { animation: none; } }
+/* 랜덤박스 여는 연출 */
+.open-stage { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: center; overflow: hidden; }
+.open-inner { position: relative; width: 100%; max-width: 440px; height: 100%; overflow: hidden; }
+.rays { position: absolute; left: 50%; top: 42%; width: 820px; height: 820px; margin: -410px 0 0 -410px; border-radius: 50%; -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 62%); mask-image: radial-gradient(circle, #000 18%, transparent 62%); animation: spin 24s linear infinite; pointer-events: none; }
+.spark { position: absolute; width: 10px; height: 10px; transform: rotate(45deg); animation: twinkle 1.6s ease-in-out infinite; pointer-events: none; }
+.conf { position: absolute; top: -20px; width: 8px; height: 14px; border-radius: 2px; animation: fall 3s linear infinite; pointer-events: none; }
+.big-stamp { font-family: var(--hand); font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(-14deg); animation: slam 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.result-ticket { animation: pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) 0.15s both; }
+.shake-fast { animation: shake 0.3s ease-in-out infinite; }
+.lid-fly { animation: lidfly 0.45s ease-out both; }
+.flash { animation: flash 0.45s ease-out both; }
+.puff { position: absolute; border-radius: 50%; animation: puff 1.8s ease-out infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes thump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.25; transform: rotate(45deg) scale(0.7); } 50% { opacity: 1; transform: rotate(45deg) scale(1.25); } }
+@keyframes fall { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(110vh) rotate(540deg); } }
+@keyframes slam { from { transform: rotate(-14deg) scale(2.4); opacity: 0; } to { transform: rotate(-14deg) scale(1); opacity: 1; } }
+@keyframes pop { from { transform: scale(0.5) translateY(40px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+@keyframes lidfly { from { transform: translate(0, 0) rotate(-4deg); } to { transform: translate(-90px, -170px) rotate(-40deg); opacity: 0.9; } }
+@keyframes flash { from { transform: scale(0.3); opacity: 1; } to { transform: scale(1.3); opacity: 0.85; } }
+@keyframes puff { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(1.4) translateY(-30px); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .box.shaking, .reveal, .rays, .spark, .conf, .big-stamp, .result-ticket, .shake-fast, .lid-fly, .flash, .puff { animation: none; }
+}
 
 .toast { position: fixed; left: 50%; bottom: calc(96px + var(--safe-b)); transform: translateX(-50%); background: var(--ink); color: #fff8ec; padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 30; }

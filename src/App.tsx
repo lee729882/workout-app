@@ -31,7 +31,7 @@ export default function App() {
       ? [
           { id: 'home', label: '오늘', icon: <IconHome />, screen: <Today /> },
           { id: 'cal', label: '캘린더', icon: <IconCalendar />, screen: <Calendar /> },
-          { id: 'shop', label: '상점', icon: <IconGift />, screen: <Shop /> },
+          { id: 'shop', label: '상점', icon: <IconGift />, screen: <Shop onGoCoupons={() => setTab('coupon')} /> },
           { id: 'coupon', label: '쿠폰함', icon: <IconTicket />, screen: <Coupons /> },
         ]
       : [
