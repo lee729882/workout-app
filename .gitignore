@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# 비밀값이 들어간 SQL
+supabase/*.secret.sql

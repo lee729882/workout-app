@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { God, Pig } from '../components/Avatars'
+import InstallBanner from '../components/InstallBanner'
+import PushCard from '../components/PushCard'
 import { KIND_LABEL, PLAN_BY_DATE } from '../data/plan'
 import { repsFor } from '../data/routines'
 import { shortLabel, timeLabel, toKey } from '../lib/date'
@@ -13,6 +15,8 @@ export function AdminApprove() {
 
   return (
     <main className="screen">
+      <InstallBanner />
+      <PushCard who="admin" />
       <div className="row" style={{ gap: 10 }}>
         <span style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flex: 'none', boxShadow: '0 0 0 2px var(--butter)' }}>
           <God size={52} />

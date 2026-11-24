@@ -5,6 +5,7 @@ import { longLabel, shortLabel, todayKey, weekStart } from '../lib/date'
 import { useStore } from '../lib/store'
 import { DayCard, DayHeaderChips, RequestBar } from '../components/DayDetail'
 import InstallBanner from '../components/InstallBanner'
+import PushCard from '../components/PushCard'
 
 export default function Today() {
   const { balance, requests } = useStore()
@@ -26,6 +27,7 @@ export default function Today() {
   return (
     <main className="screen">
       <InstallBanner />
+      <PushCard who="user" />
       <div className="between" style={{ alignItems: 'flex-start' }}>
         <div>
           <div className="muted small">{longLabel(today)}</div>

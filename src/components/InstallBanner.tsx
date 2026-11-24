@@ -7,7 +7,7 @@ const HIDE_KEY = 'oww.install.hidden'
 function hiddenRecently() {
   try {
     const t = Number(localStorage.getItem(HIDE_KEY) ?? 0)
-    return Date.now() - t < 3 * 24 * 60 * 60 * 1000 // 닫으면 3일 동안 안 보여요
+    return Date.now() - t < 24 * 60 * 60 * 1000 // 닫으면 하루 동안 안 보여요
   } catch {
     return false
   }
@@ -71,14 +71,15 @@ function GuideSheet({ ios, onClose }: { ios: boolean; onClose: () => void }) {
         {ios ? (
           <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 14, fontSize: 15, lineHeight: 1.5 }}>
             <li>
-              화면 아래 <b>공유 버튼</b>을 눌러요{' '}
-              <ShareIcon />
+              Safari 아래쪽 주소창 오른쪽의 <b>⋯</b> 버튼을 눌러요
+              <div className="muted small">예전 Safari는 화면 아래 <b>공유 버튼</b> <ShareIcon />을 바로 누르면 돼요</div>
             </li>
             <li>
-              목록을 아래로 내려서 <b>홈 화면에 추가</b>를 눌러요
+              <b>공유</b> <ShareIcon />를 누르고, 목록을 아래로 내려서 <b>홈 화면에 추가</b>를 눌러요
+              <div className="muted small">안 보이면 맨 아래 <b>더 보기</b> 안에 있어요</div>
             </li>
             <li>
-              오른쪽 위 <b>추가</b>를 누르면 끝!
+              <b>웹 앱으로 열기</b>가 켜져 있는지 확인하고 <b>추가</b>를 누르면 끝!
             </li>
           </ol>
         ) : (
@@ -93,7 +94,7 @@ function GuideSheet({ ios, onClose }: { ios: boolean; onClose: () => void }) {
         )}
         {ios && (
           <div className="note" style={{ fontSize: 17 }}>
-            공유 버튼이 안 보이면 화면을 살짝 위로 올려보세요. 꼭 <b>Safari</b>에서 해야 해요!
+            아래 버튼들이 안 보이면 화면을 살짝 위로 올려보세요. 꼭 <b>Safari</b>에서 해야 해요!
           </div>
         )}
         <button className="btn" onClick={onClose}>알겠어요</button>
