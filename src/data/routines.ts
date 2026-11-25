@@ -24,6 +24,21 @@ export const LOWER: Move[] = [
   { name: '버드독', weight: '맨몸', tip: '네발 자세에서 반대쪽 팔과 다리를 쭉 뻗고 2초 버티기. 허리가 흔들리지 않게 천천히.', video: '버드독 운동 자세', bothSides: true },
 ]
 
+// 근력만 하는 날(집)에 더하는 동작. 걷기와 같이 하는 날은 이미 40분이라 더하지 않아요.
+// 체크는 동작 순서(번호)로 저장되니, 새 동작은 항상 맨 뒤에 붙여요.
+export const UPPER_EXTRA: Move[] = [
+  { name: '무릎 대고 푸쉬업', weight: '맨몸', tip: '무릎을 매트에 대고 손은 어깨보다 살짝 넓게. 머리부터 무릎까지 일직선을 유지하며 가슴을 내렸다 밀기. 힘들면 벽에 손을 대고 해도 OK.', video: '무릎 푸쉬업 자세 초보 여자' },
+  { name: '사이드 레터럴 레이즈', weight: '1kg', tip: '팔꿈치를 살짝 굽히고 아령을 옆으로 어깨 높이까지만 들기. 어깨가 으쓱 올라가지 않게, 천천히 내리기.', video: '덤벨 사이드 레터럴 레이즈 자세 초보' },
+]
+
+export const LOWER_EXTRA: Move[] = [
+  { name: '스모 스쿼트', weight: '맨몸', tip: '발을 어깨보다 넓게, 발끝은 바깥으로. 상체를 세운 채 무릎을 발끝 방향으로 벌리며 앉았다 일어나기.', video: '스모 스쿼트 자세 초보' },
+  { name: '옆으로 누워 다리 들기', weight: '맨몸', tip: '옆으로 누워 골반을 세우고, 위쪽 다리를 천천히 들었다 내리기. 발끝은 정면, 몸이 뒤로 넘어가지 않게.', video: '사이드 레그레이즈 자세 초보', bothSides: true },
+]
+
+/** 이 날짜부터 동작을 늘려요 (그 전 기록은 그대로) */
+export const EXTRA_FROM = '2026-11-26'
+
 /** 기간별 횟수: 11/25~12/13 10회, 12/14~12/23 11회, 12/24~ 12회 */
 export function repsFor(date: string): number {
   if (date <= '2026-12-13') return 10
@@ -32,8 +47,11 @@ export function repsFor(date: string): number {
 }
 
 export function movesFor(plan: DayPlan): Move[] {
-  if (plan.kind === 'upper' || plan.kind === 'upperWalk') return UPPER
-  if (plan.kind === 'lower' || plan.kind === 'lowerWalk') return LOWER
+  const more = plan.date >= EXTRA_FROM
+  if (plan.kind === 'upper') return more ? [...UPPER, ...UPPER_EXTRA] : UPPER
+  if (plan.kind === 'lower') return more ? [...LOWER, ...LOWER_EXTRA] : LOWER
+  if (plan.kind === 'upperWalk') return UPPER
+  if (plan.kind === 'lowerWalk') return LOWER
   return []
 }
 

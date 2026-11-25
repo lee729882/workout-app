@@ -77,7 +77,7 @@ export function DayHeaderChips({ plan }: { plan: DayPlan }) {
     <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
       <span className="chip solid" style={{ background: SHIFT_COLOR[plan.shift] }}>{plan.shift} 근무</span>
       {plan.place && <span className="chip">{plan.place === 'home' ? '집에서' : '본가'}</span>}
-      {isWorkout(plan.kind) && <span className="chip">약 30분</span>}
+      {isWorkout(plan.kind) && <span className="chip">약 {plan.kind === 'upperWalk' || plan.kind === 'lowerWalk' ? 40 : 30}분</span>}
     </div>
   )
 }
