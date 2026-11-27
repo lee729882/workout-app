@@ -1,23 +1,42 @@
 // 하루치 운동 카드 + 완료 요청. 오늘 화면과 캘린더에서 같이 써요.
 import { useRef, useState } from 'react'
 import { KIND_LABEL, SHIFT_COLOR, isWorkout, type DayPlan } from '../data/plan'
-import { movesFor, repsFor, videoUrl } from '../data/routines'
+import { movesFor, repsOf, videoUrl } from '../data/routines'
+import { shortLabel } from '../lib/date'
+import { weekDays } from '../lib/schedule'
 import { shrinkPhoto, useStore } from '../lib/store'
 import { IconCamera, IconCheck, IconClose, IconPlay } from './Icons'
+import MoveSheet from './MoveSheet'
 
 export function DayCard({ plan }: { plan: DayPlan }) {
-  const { checks, toggleCheck } = useStore()
+  const { checks, toggleCheck, moveWorkout } = useStore()
   const moves = movesFor(plan)
-  const reps = repsFor(plan.date)
+  const reps = repsOf(plan)
   const checked = checks[plan.date] ?? []
   const [open, setOpen] = useState<number | null>(null)
 
   if (!isWorkout(plan.kind)) {
+    const movedTo = plan.movedTo
     return (
       <div className="card" style={{ textAlign: 'center' }}>
         <span className="tape" style={{ top: -11, left: '50%', marginLeft: -42, transform: 'rotate(-3deg)' }} />
-        <div className="hand" style={{ fontSize: 28 }}>{plan.kind === 'recovery' ? '회복하는 날' : '쉬는 날'}</div>
-        <p className="muted small" style={{ margin: '6px 0 0' }}>{plan.note ?? '푹 쉬는 것도 운동이에요.'}</p>
+        <div className="hand" style={{ fontSize: 28 }}>{movedTo ? '운동을 옮긴 날' : plan.kind === 'recovery' ? '회복하는 날' : '쉬는 날'}</div>
+        <p className="muted small" style={{ margin: '6px 0 0' }}>
+          {movedTo
+            ? `이 날 ${plan.movedKind ? KIND_LABEL[plan.movedKind] : '운동'}은 ${shortLabel(movedTo)}로 옮겼어요`
+            : (plan.note ?? '푹 쉬는 것도 운동이에요.')}
+        </p>
+        {movedTo && (
+          <button
+            className="btn sm ghost"
+            style={{ marginTop: 12 }}
+            onClick={() => {
+              if (window.confirm(`${shortLabel(movedTo)}로 옮긴 운동을 다시 ${shortLabel(plan.date)}로 되돌릴까요?`)) moveWorkout(plan.date, plan.date).catch(() => undefined)
+            }}
+          >
+            원래 날짜로 되돌리기
+          </button>
+        )}
       </div>
     )
   }
@@ -78,14 +97,16 @@ export function DayHeaderChips({ plan }: { plan: DayPlan }) {
       <span className="chip solid" style={{ background: SHIFT_COLOR[plan.shift] }}>{plan.shift} 근무</span>
       {plan.place && <span className="chip">{plan.place === 'home' ? '집에서' : '본가'}</span>}
       {isWorkout(plan.kind) && <span className="chip">약 {plan.kind === 'upperWalk' || plan.kind === 'lowerWalk' ? 40 : 30}분</span>}
+      {plan.origin && <span className="chip solid" style={{ background: 'var(--note)' }}>🔁 {shortLabel(plan.origin)}에서 옮김</span>}
     </div>
   )
 }
 
 /** 완료 요청 버튼 + 상태 */
 export function RequestBar({ plan, today }: { plan: DayPlan; today: string }) {
-  const { requestFor } = useStore()
+  const { requestFor, whyNot } = useStore()
   const [sheet, setSheet] = useState(false)
+  const [moving, setMoving] = useState(false)
   const req = requestFor(plan.date)
 
   if (!isWorkout(plan.kind)) return null
@@ -104,9 +125,9 @@ export function RequestBar({ plan, today }: { plan: DayPlan; today: string }) {
   if (req?.status === 'pending') {
     return <div className="note" style={{ textAlign: 'center' }}>관리자 확인을 기다리는 중이에요</div>
   }
-  if (plan.date > today) {
-    return <p className="muted small" style={{ textAlign: 'center', margin: 0 }}>그날이 되면 완료 요청을 보낼 수 있어요</p>
-  }
+
+  // 같은 주에 옮길 수 있는 날이 하나라도 있을 때만 버튼을 보여줘요
+  const canMove = weekDays(plan.origin ?? plan.date).some((d) => d !== plan.date && !whyNot(plan, d, today))
 
   return (
     <>
@@ -115,8 +136,18 @@ export function RequestBar({ plan, today }: { plan: DayPlan; today: string }) {
           다시 해볼까요? {req.comment && <>— {req.comment}</>}
         </div>
       )}
-      <button className="btn" onClick={() => setSheet(true)}>다 했어요! 확인 요청</button>
+      {plan.date > today ? (
+        <p className="muted small" style={{ textAlign: 'center', margin: 0 }}>그날이 되면 완료 요청을 보낼 수 있어요</p>
+      ) : (
+        <button className="btn" onClick={() => setSheet(true)}>다 했어요! 확인 요청</button>
+      )}
+      {canMove && (
+        <button className="btn ghost" style={{ minHeight: 46, fontSize: 15 }} onClick={() => setMoving(true)}>
+          🔁 날짜 옮기기{plan.date < today ? ' (못 한 운동 다른 날 하기)' : ''}
+        </button>
+      )}
       {sheet && <RequestSheet plan={plan} onClose={() => setSheet(false)} />}
+      {moving && <MoveSheet plan={plan} today={today} onClose={() => setMoving(false)} />}
     </>
   )
 }

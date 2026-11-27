@@ -1,4 +1,5 @@
 import { REWARDS, type Reward } from '../data/rewards'
+import type { WorkoutMove } from './schedule'
 
 export type Role = 'user' | 'admin'
 export type ReqStatus = 'pending' | 'approved' | 'rejected'
@@ -40,9 +41,11 @@ export interface Data {
   checks: Record<string, number[]>
   /** 상점 보상과 가중치 */
   rewards: Reward[]
+  /** 옮긴 운동 */
+  moves: WorkoutMove[]
 }
 
-export const EMPTY: Data = { requests: [], ledger: [], coupons: [], pity: 0, checks: {}, rewards: REWARDS }
+export const EMPTY: Data = { requests: [], ledger: [], coupons: [], pity: 0, checks: {}, rewards: REWARDS, moves: [] }
 
 /** 로컬 저장소와 Supabase 저장소가 똑같이 지키는 모양 */
 export interface Backend extends Data {
@@ -62,6 +65,8 @@ export interface Backend extends Data {
   grant: (amount: number, reason: string) => Promise<void>
   /** 관리자: 대기/반려 요청 지우기 */
   deleteRequest: (id: string) => Promise<void>
+  /** 운동 옮기기. to 에 원래 날짜(from)를 주면 되돌리기 */
+  moveWorkout: (from: string, to: string) => Promise<void>
   /** 운동러: 쿠폰 사용 요청 취소 */
   cancelCouponRequest: (id: string) => Promise<void>
   /** 관리자: 쿠폰 삭제 */

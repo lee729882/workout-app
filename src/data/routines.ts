@@ -46,8 +46,11 @@ export function repsFor(date: string): number {
   return 12
 }
 
+/** 옮긴 운동도 원래 계획 날짜 기준으로 횟수를 정해요 */
+export const repsOf = (plan: DayPlan) => repsFor(plan.origin ?? plan.date)
+
 export function movesFor(plan: DayPlan): Move[] {
-  const more = plan.date >= EXTRA_FROM
+  const more = (plan.origin ?? plan.date) >= EXTRA_FROM
   if (plan.kind === 'upper') return more ? [...UPPER, ...UPPER_EXTRA] : UPPER
   if (plan.kind === 'lower') return more ? [...LOWER, ...LOWER_EXTRA] : LOWER
   if (plan.kind === 'upperWalk') return UPPER

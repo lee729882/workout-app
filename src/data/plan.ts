@@ -13,6 +13,12 @@ export interface DayPlan {
   cardio?: string[]
   /** 📌 메모 */
   note?: string
+  /** 다른 날에서 옮겨 온 운동이면 원래 계획 날짜 (횟수는 이 날짜 기준) */
+  origin?: string
+  /** 이 날 운동을 다른 날로 옮겼으면 그 날짜 */
+  movedTo?: string
+  /** 옮겨 간 운동의 종류 (캘린더 표시용) */
+  movedKind?: Kind
 }
 
 const d = (date: string, shift: Shift, kind: Kind, extra: Partial<DayPlan> = {}): DayPlan => ({

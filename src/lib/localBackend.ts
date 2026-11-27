@@ -1,7 +1,8 @@
 // 임시 모드: 이 기기의 localStorage 에만 저장해요. (.env 가 없을 때)
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BOX_PRICE, POINTS_PER_WORKOUT, WEEKLY_BONUS, WEEKLY_GOAL, roll } from '../data/rewards'
-import { shortLabel, weekStart } from './date'
+import { shortLabel, todayKey, weekStart } from './date'
+import { buildSchedule } from './schedule'
 import { EMPTY, PIN_LENGTH, type Backend, type Data, type ReqStatus, type Role } from './types'
 
 const DATA_KEY = 'oww.data.v1'
@@ -107,6 +108,22 @@ export function useLocalBackend(): Backend {
 
     deleteRequest: async (id) =>
       setData((d) => ({ ...d, requests: d.requests.filter((r) => r.id !== id || r.status === 'approved') })),
+
+    moveWorkout: async (from, to) => {
+      const sched = buildSchedule(data.moves)
+      const cur = data.moves.find((m) => m.from === from)?.to ?? from
+      const plan = sched.planOn(cur)
+      const busy = data.requests.some((r) => r.date === cur && (r.status === 'pending' || r.status === 'approved'))
+      const why = !plan ? '옮길 운동이 없어요' : busy ? '이미 완료 요청한 운동은 옮길 수 없어요' : sched.whyNot(plan, to, todayKey())
+      if (why) {
+        window.alert(`앗, 옮길 수 없어요: ${why}`)
+        throw new Error(why)
+      }
+      setData((d) => {
+        const rest = d.moves.filter((m) => m.from !== from)
+        return { ...d, moves: to === from ? rest : [...rest, { from, to }] }
+      })
+    },
 
     cancelCouponRequest: async (id) =>
       setData((d) => ({ ...d, coupons: d.coupons.map((c) => (c.id === id && c.status === 'requested' ? { ...c, status: 'owned', wantDate: undefined } : c)) })),

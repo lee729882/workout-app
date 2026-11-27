@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { KIND_SHORT, PLAN, PLAN_BY_DATE, SHIFT_COLOR, isWorkout } from '../data/plan'
+import { KIND_SHORT, SHIFT_COLOR, isWorkout } from '../data/plan'
 import { fromKey, longLabel, toKey, todayKey } from '../lib/date'
 import { useStore } from '../lib/store'
 import { DayCard, DayHeaderChips, RequestBar } from '../components/DayDetail'
@@ -10,7 +10,7 @@ const MONTHS = [
 ]
 
 export default function Calendar() {
-  const { requestFor } = useStore()
+  const { requestFor, planOn, hasWorkout } = useStore()
   const today = todayKey()
   const [mi, setMi] = useState(() => (today.startsWith('2026-11') ? 0 : 1))
   const [sel, setSel] = useState<string | null>(null)
@@ -30,9 +30,10 @@ export default function Calendar() {
     return out.slice(0, out[35].inMonth ? 42 : 35)
   }, [y, m])
 
-  const monthPlans = PLAN.filter((p) => p.date.startsWith(`${y}-${String(m).padStart(2, '0')}`) && isWorkout(p.kind))
-  const stamped = monthPlans.filter((p) => requestFor(p.date)?.status === 'approved').length
-  const selPlan = sel ? PLAN_BY_DATE[sel] : undefined
+  const prefix = `${y}-${String(m).padStart(2, '0')}`
+  const monthPlans = cells.filter((c) => c.key.startsWith(prefix) && hasWorkout(c.key))
+  const stamped = monthPlans.filter((c) => requestFor(c.key)?.status === 'approved').length
+  const selPlan = sel ? planOn(sel) : undefined
 
   return (
     <main className="screen" style={{ paddingLeft: 14, paddingRight: 14, gap: 12 }}>
@@ -58,7 +59,7 @@ export default function Calendar() {
       </div>
       <div className="cal">
         {cells.map(({ key, inMonth }) => {
-          const p = PLAN_BY_DATE[key]
+          const p = planOn(key)
           const req = requestFor(key)
           const work = p && isWorkout(p.kind)
           const cls = ['cell', work && 'work', !inMonth && 'out', key === today && 'today', key === sel && 'sel'].filter(Boolean).join(' ')
@@ -67,7 +68,14 @@ export default function Calendar() {
             <button key={key} className={cls} disabled={!p} onClick={() => setSel(key)} aria-label={p ? longLabel(key) : undefined}>
               <span className="num" style={day.getDay() === 0 ? { color: 'var(--stamp)' } : undefined}>{day.getDate()}</span>
               {p && <span className="shift" style={{ background: SHIFT_COLOR[p.shift] }}>{p.shift}</span>}
-              {p && <span className={`lab${work ? '' : ' rest'}`}>{KIND_SHORT[p.kind]}</span>}
+              {p?.movedTo ? (
+                <span className="lab rest" aria-label={`${KIND_SHORT[p.movedKind ?? 'rest']} ${fromKey(p.movedTo).getDate()}일로 옮김`}>
+                  →{fromKey(p.movedTo).getDate()}일
+                </span>
+              ) : (
+                p && <span className={`lab${work ? '' : ' rest'}`}>{KIND_SHORT[p.kind]}</span>
+              )}
+              {p?.origin && <span className="moved">옮김</span>}
               {req?.status === 'approved' && <span className="stamp">완료</span>}
               {req?.status === 'pending' && <span className="wait">확인 중</span>}
             </button>

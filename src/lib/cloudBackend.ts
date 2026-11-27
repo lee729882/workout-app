@@ -46,7 +46,7 @@ export function useCloudBackend(): Backend {
 
   const reload = useCallback(async () => {
     if (!session) return
-    const [profile, reqs, ledger, coupons, pity, checks, rewards] = await Promise.all([
+    const [profile, reqs, ledger, coupons, pity, checks, rewards, moves] = await Promise.all([
       sb.from('profiles').select('role').eq('id', session.user.id).maybeSingle(),
       sb.from('workout_requests').select('*').order('created_at'),
       sb.from('point_ledger').select('id, amount, reason, at').order('at'),
@@ -54,7 +54,9 @@ export function useCloudBackend(): Backend {
       sb.from('settings').select('value').eq('key', 'pity_count').maybeSingle(),
       sb.from('day_checks').select('*'),
       sb.from('rewards').select('*').eq('active', true).order('weight', { ascending: false }),
+      sb.from('workout_moves').select('from_date, to_date'),
     ])
+    // workout_moves 는 update-v5.sql 전에는 없어서, 없으면 빈 목록으로 넘어가요
     const err = [profile, reqs, ledger, coupons, pity, checks, rewards].find((r) => r.error)?.error
     if (err) {
       console.error(err)
@@ -96,6 +98,7 @@ export function useCloudBackend(): Backend {
       pity: (pity.data?.value as number | undefined) ?? 0,
       checks: Object.fromEntries(((checks.data ?? []) as CheckRow[]).map((c) => [c.date, c.items])),
       rewards: ((rewards.data ?? []) as RewardRow[]).map(rowToReward),
+      moves: ((moves.data ?? []) as { from_date: string; to_date: string }[]).map((m) => ({ from: m.from_date, to: m.to_date })),
     })
   }, [sb, session])
 
@@ -199,6 +202,10 @@ export function useCloudBackend(): Backend {
       if (error) fail(error)
       if (!count) fail(new Error('지울 수 없어요 (승인된 요청이거나 권한이 없어요. update-v3.sql 을 실행했는지 확인해 주세요)'))
       await reload()
+    },
+
+    moveWorkout: async (from, to) => {
+      await rpc('move_workout', { src: from, dst: to })
     },
 
     cancelCouponRequest: async (id) => {

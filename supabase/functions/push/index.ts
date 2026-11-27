@@ -19,7 +19,12 @@ interface Msg {
 }
 interface Hook {
   table: string
-  type: 'INSERT' | 'UPDATE'
+  type: 'INSERT' | 'UPDATE' | 'DELETE'
+  /** 옮기기 알림용: 원래 계획 */
+  // deno-lint-ignore no-explicit-any
+  plan?: any
+  /** 누가 했는지 (user/admin) */
+  actor?: Role | null
   // deno-lint-ignore no-explicit-any
   record: any
   // deno-lint-ignore no-explicit-any
@@ -49,17 +54,30 @@ const KIND: Record<string, string> = {
   lowerWalk: '하체+걷기',
 }
 
-function messageFor({ table, type, record: rec, old_record: old, reward }: Hook): Msg | null {
+function messageFor({ table, type, record: rec, old_record: old, reward, plan, actor }: Hook): Msg | null {
   // 운동하는 날 밤 12시 알림 (daily_reminder 가 보내요)
   if (table === 'reminder') {
     const place = rec.place === 'parents' ? '본가' : '집'
-    const detail = rec.reps ? `${rec.reps}회 × 3세트 · ${place} · 약 30분` : (rec.cardio?.[0] ?? `${place} · 30분`)
+    const mins = rec.kind === 'upperWalk' || rec.kind === 'lowerWalk' ? 40 : 30
+    const detail = rec.reps ? `${rec.reps}회 × 3세트 · ${place} · 약 ${mins}분` : (rec.cardio?.[0] ?? `${place} · 30분`)
+    const moved = rec.today && rec.today !== rec.date ? `🔁 ${md(rec.date)}에서 옮긴 운동\n` : ''
     return {
       to: 'user',
       title: `🏋️ 오늘은 ${KIND[rec.kind] ?? '운동'} 데이!`,
-      body: rec.note ? `${detail}\n📌 ${rec.note}` : detail,
-      tag: `reminder-${rec.date}`,
+      body: moved + (rec.note ? `${detail}\n📌 ${rec.note}` : detail),
+      tag: `reminder-${rec.today ?? rec.date}`,
     }
+  }
+
+  // 운동 날짜 옮기기: 한 사람이 옮기면 다른 사람에게
+  if (table === 'workout_moves') {
+    const to: Role = actor === 'admin' ? 'user' : 'admin'
+    const who = actor === 'admin' ? '관리자가' : '운동러가'
+    const kind = KIND[plan?.kind] ?? '운동'
+    if (type === 'DELETE') {
+      return { to, title: '↩️ 운동을 원래 날짜로 되돌렸어요', body: `${who} ${kind}${eulReul(kind)} ${md(old.to_date)} → ${md(old.from_date)}로 되돌렸어요`, tag: `move-${old.from_date}` }
+    }
+    return { to, title: '🔁 운동 날짜를 옮겼어요', body: `${who} ${md(rec.from_date)} ${kind}${eulReul(kind)} ${md(rec.to_date)}로 옮겼어요`, tag: `move-${rec.from_date}` }
   }
 
   if (table === 'workout_requests') {

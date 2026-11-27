@@ -4,6 +4,7 @@ import { REWARD_BY_ID } from '../data/rewards'
 import { useCloudBackend } from './cloudBackend'
 import { useLocalBackend } from './localBackend'
 import { CLOUD } from './supabase'
+import { buildSchedule } from './schedule'
 import type { Backend, Coupon } from './types'
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -15,8 +16,10 @@ const useBackend = CLOUD ? useCloudBackend : useLocalBackend
 function useStoreValue() {
   const b = useBackend()
   const balance = useMemo(() => b.ledger.reduce((s, e) => s + e.amount, 0), [b.ledger])
+  const schedule = useMemo(() => buildSchedule(b.moves), [b.moves])
   return {
     ...b,
+    ...schedule,
     balance,
     requestFor: (date: string) => [...b.requests].reverse().find((r) => r.date === date),
     rewardOf: (c: Coupon) => b.rewards.find((r) => r.id === c.rewardId) ?? REWARD_BY_ID[c.rewardId],

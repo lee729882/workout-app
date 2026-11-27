@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { God, Pig } from '../components/Avatars'
 import InstallBanner from '../components/InstallBanner'
 import PushCard from '../components/PushCard'
-import { KIND_LABEL, PLAN_BY_DATE } from '../data/plan'
-import { repsFor } from '../data/routines'
+import { KIND_LABEL } from '../data/plan'
+import { repsOf } from '../data/routines'
 import { shortLabel, timeLabel, toKey } from '../lib/date'
 import { useStore, type WorkoutRequest } from '../lib/store'
 import { Ticket } from './Coupons'
@@ -137,7 +137,7 @@ export function AdminApprove() {
 }
 
 function RequestCard({ req }: { req: WorkoutRequest }) {
-  const { review, checks, deleteRequest } = useStore()
+  const { review, checks, deleteRequest, planOn } = useStore()
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
   const decide = (approve: boolean) => {
@@ -149,7 +149,7 @@ function RequestCard({ req }: { req: WorkoutRequest }) {
     setBusy(true)
     deleteRequest(req.id).catch(() => setBusy(false))
   }
-  const plan = PLAN_BY_DATE[req.date]
+  const plan = planOn(req.date)
   const done = (checks[req.date] ?? []).length
   const isStrength = plan && ['upper', 'lower', 'upperWalk', 'lowerWalk'].includes(plan.kind)
 
@@ -174,7 +174,8 @@ function RequestCard({ req }: { req: WorkoutRequest }) {
         )}
         <div className="hand" style={{ fontSize: 17, padding: '6px 2px 8px' }}>
           {plan ? KIND_LABEL[plan.kind] : ''}
-          {isStrength ? ` ${repsFor(req.date)}회 × 3세트 · 체크 ${done}개` : ''}
+          {isStrength ? ` ${repsOf(plan)}회 × 3세트 · 체크 ${done}개` : ''}
+          {plan?.origin ? ` · ${shortLabel(plan.origin)}에서 옮김` : ''}
         </div>
       </div>
       {req.memo && (
